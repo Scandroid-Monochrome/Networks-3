@@ -12,7 +12,25 @@ struct NeighborCosts   *neighbor3;
 /* students to write the following two routines, and maybe some others */
 
 void rtinit3() {
+    // Find our neighbor nodes and the costs to those nodes
+    neighbor3 = getNeighborCosts(3);
 
+    // Variable for our costs
+    int our_costs[MAX_NODES];
+
+    // Initialize the distance table and other structures
+    for (int nodenum = 0; nodenum < 4; nodenum++) {
+        dt3.costs[3][nodenum] = neighbor3->NodeCosts[nodenum];
+        our_costs[nodenum] = neighbor3->NodeCosts[nodenum];
+        // printf("%d,", dt3.costs[3][nodenum]);
+    }
+    // printf("\n");
+
+    // Send minimum cost paths to neighbor nodes
+    for (int nodenum = 0; nodenum < 3; nodenum++) {
+        struct RoutePacket our_packet = {3, nodenum, our_costs};
+        toLayer2(our_packet);
+    }
 }
 
 

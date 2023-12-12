@@ -16,14 +16,24 @@ void rtinit0() {
     // Find our neighbor nodes and the costs to those nodes
     neighbor0 = getNeighborCosts(0);
 
+    // Variable for our costs
+    int our_costs[MAX_NODES];
+
     // Initialize the distance table and other structures
     for (int nodenum = 0; nodenum < 4; nodenum++) {
         dt0.costs[0][nodenum] = neighbor0->NodeCosts[nodenum];
-        printf("%d,", dt0.costs[0][nodenum]);
+        our_costs[nodenum] = neighbor0->NodeCosts[nodenum];
+        // printf("%d,", dt0.costs[0][nodenum]);
     }
-    printf("\n");
+    // printf("\n");
 
     // Send minimum cost paths to neighbor nodes
+    for (int nodenum = 1; nodenum < 4; nodenum++) {
+        struct RoutePacket our_packet = {0, nodenum, our_costs};
+        toLayer2(our_packet);
+    }
+
+    
 }
 
 
