@@ -41,3 +41,7 @@ struct RoutePacket {
 // Prototype so all nodes can see the routine in project3.c
 void                  toLayer2( struct RoutePacket packet );
 struct NeighborCosts *getNeighborCosts(int myNodeNumber);
+
+// *********MODULARIZATION CODE*************
+
+void init_distance_table(struct distance_table* dt, struct NeighborCosts *neighbors, int datafor);

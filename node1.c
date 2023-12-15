@@ -37,7 +37,15 @@ void rtinit1() {
 
 
 void rtupdate1( struct RoutePacket *rcvdpkt ) {
-
+    // Be able to handle changing only 1, 2, or 3 values instead of all 4
+    for (int i = 0; i < 4; i++) {
+        int current_cost = rcvdpkt->mincost[i];
+        // If the cost is not 0(blank)
+        if (current_cost != 0) {
+            // Update table
+            dt1.costs[1][i] = current_cost;
+        }
+    }
 }
 
 
