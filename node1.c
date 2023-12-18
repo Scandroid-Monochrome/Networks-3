@@ -1,38 +1,18 @@
 #include <stdio.h>
 #include "project3.h"
+#include "utilities.h"
 
 extern int TraceLevel;
+extern float clocktime;
 
-struct distance_table {
-  int costs[MAX_NODES][MAX_NODES];
-};
 struct distance_table dt1;
 struct NeighborCosts   *neighbor1;
 
 /* students to write the following two routines, and maybe some others */
 
 void rtinit1() {
-    // Find our neighbor nodes and the costs to those nodes
     neighbor1 = getNeighborCosts(1);
-
-    // Variable for our costs
-    int our_costs[MAX_NODES];
-
-    // Initialize the distance table and other structures
-    for (int nodenum = 0; nodenum < 4; nodenum++) {
-        dt1.costs[1][nodenum] = neighbor1->NodeCosts[nodenum];
-        our_costs[nodenum] = neighbor1->NodeCosts[nodenum];
-        // printf("%d,", dt1.costs[1][nodenum]);
-    }
-    // printf("\n");
-
-    // Send minimum cost paths to neighbor nodes
-    for (int nodenum = 0; nodenum < 4; nodenum++) {
-        if (nodenum != 1) {
-            struct RoutePacket our_packet = {1, nodenum, our_costs};
-            toLayer2(our_packet);
-        }
-    }
+    init_node(1, *neighbor1, &dt1);
 }
 
 

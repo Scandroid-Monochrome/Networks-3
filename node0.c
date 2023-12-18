@@ -6,10 +6,8 @@
 #define OFF 0
 
 extern int TraceLevel;
+extern float clocktime;
 
-struct distance_table {
-  int costs[MAX_NODES][MAX_NODES];
-};
 struct distance_table dt0;
 struct NeighborCosts   *neighbor0;
 
@@ -22,28 +20,8 @@ void printdt0( int MyNodeNumber, struct NeighborCosts *neighbor, struct distance
 /* students to write the following two routines, and maybe some others */
 
 void rtinit0() {
-    // Find our neighbor nodes and the costs to those nodes
     neighbor0 = getNeighborCosts(0);
-
-    // Variable for our costs
-    int our_costs[MAX_NODES];
-
-    // Initialize the distance table and other structures
-    // init_distance_table(&dt0, neighbor0, 0);
-    for (int nodenum = 0; nodenum < 4; nodenum++) {
-        int node_cost = neighbor0->NodeCosts[nodenum];
-        dt0.costs[0][nodenum] = node_cost;
-        our_costs[nodenum] = node_cost;
-        // printf("%d,", our_costs[nodenum]);
-    }
-    // printf("\n");
-
-    // Send minimum cost paths to neighbor nodes
-    for (int nodenum = 1; nodenum < 4; nodenum++) {
-        struct RoutePacket our_packet = {0, nodenum, our_costs};
-        toLayer2(our_packet);
-    }
-
+    init_node(0, *neighbor0, &dt0);
 }
 
 
@@ -78,7 +56,7 @@ void rtupdate0( struct RoutePacket *rcvdpkt ) {
         dt0.costs[0][node_num] =  updated_cost;
     }
 
-    printdt0(0, neighbor0, &dt0);
+    // printdt0(0, neighbor0, &dt0);
 
     // Tell the other nodes what our new values are
     for (int node_num = 1; node_num < MAX_NODES; node_num++) {

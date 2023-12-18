@@ -1,0 +1,12 @@
+Networks Project 3-Randolph Zhang
+
+HOW TO COMPILE:
+make
+    // Compiles the file
+./project3
+    // Runs the file
+At this point, we should get a prompt telling us:
+Enter Trace Level:
+And we should input:
+1 - no instructor logs, only student logs are allowed
+2 - both instructor and student logs
