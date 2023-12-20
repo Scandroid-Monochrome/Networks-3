@@ -5,7 +5,7 @@
 extern int TraceLevel;
 extern float clocktime;
 
-void init_node(int current_node, struct NeighborCosts neighborCosts, struct distance_table *dt) {
+void init_node(int current_node, struct NeighborCosts neighborCosts, struct distance_table *dt, char distance_vector[20]) {
     if (TraceLevel >= 1) {
         printf("At time t=%1.6f, rtinit%d called.\n", current_node, clocktime);
     }
@@ -15,7 +15,7 @@ void init_node(int current_node, struct NeighborCosts neighborCosts, struct dist
     // Variable for our costs
     int our_costs[MAX_NODES];
 
-    char distance_vector[20] = "";
+    // char distance_vector[20] = "";
 
     // Initialize the distance table and other structures
     // init_distance_table(&dt0, neighbor0, 0);
@@ -44,6 +44,42 @@ void init_node(int current_node, struct NeighborCosts neighborCosts, struct dist
             if (TraceLevel >= 1) {
                 printf("At time t=%1.6f, ", clocktime);
                 printf("node %d sends packet to node %d with: %s\n", current_node, nodenum, distance_vector);
+            }
+        }
+    }
+}
+
+
+
+void update_table(struct distance_table* dt, int index, int new_info[MAX_NODES]) {
+    // Loop through our row
+    for (int i = 0; i < MAX_NODES; i++) {
+        // List our update variable
+        int new_value = new_info[i];
+        // Update our table with the new info
+        dt->costs[index][i] = new_value;
+    }
+}
+
+void update_row(struct distance_table* dt, int start_row, int end_row, int start_cost) {
+    // Loop through our distance table
+    for (int i = 0; i < MAX_NODES; i++) {
+        
+        // Log our current cost for this node
+        int current_cost = dt->costs[start_row][i];
+
+        // If the cell isn't our starting cell
+        if (i != end_row) {
+
+            int scnd_hop_cost = dt->costs[end_row][i];
+            // Add our start cost to the cost from this node to the next
+            int new_cost = start_cost + scnd_hop_cost;
+
+            // Compare our new cost to our current cost
+            // If our new cost is less:
+            if (new_cost < current_cost) {
+                // Set our current cost to new cost
+                dt->costs[start_row][i] = new_cost;
             }
         }
     }

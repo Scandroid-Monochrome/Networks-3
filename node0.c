@@ -8,6 +8,8 @@
 extern int TraceLevel;
 extern float clocktime;
 
+char distance_vector0[20] = "";
+
 struct distance_table dt0;
 struct NeighborCosts   *neighbor0;
 
@@ -15,122 +17,50 @@ int find_min_cost(int start_num, int target_num, int current_min, struct distanc
 
 int find_min_cost_int(int start_num, int target_num, int starting_cost, int current_min, int path_tracker[MAX_NODES], int path_index_tracker, struct distance_table* dt);
 
+void print_distance_table(struct distance_table dt, int table_num);
+
 void printdt0( int MyNodeNumber, struct NeighborCosts *neighbor, struct distance_table *dtptr );
 
 /* students to write the following two routines, and maybe some others */
 
 void rtinit0() {
     neighbor0 = getNeighborCosts(0);
-    init_node(0, *neighbor0, &dt0);
+    init_node(0, *neighbor0, &dt0, distance_vector0);
 }
 
 
 void rtupdate0( struct RoutePacket *rcvdpkt ) {
-    printdt0(0, neighbor0, &dt0);
+    print_distance_table(dt0, 0);
+
     // Find out which node our packet came from
-    int starting_node = rcvdpkt->sourceid;
-
-    // Update the values for another node
-    // Be able to handle changing only 1, 2, or 3 values instead of all 4
-    for (int i = 0; i < 4; i++) {
-        int current_cost = rcvdpkt->mincost[i];
-        // If the cost is not 0(blank)
-        if (current_cost != 0) {
-            // Update table
-            dt0.costs[starting_node][i] = current_cost;
-        }
+    int rcv_index = rcvdpkt->sourceid;
+    if (TraceLevel >= 1) {
+        printf("At time t=%1.6f, ", clocktime);
+        printf("rtupdate0() called, by a pkt received from Sender id: %d.\n", rcv_index);
     }
 
-    // Update our own values with the given information
-    int updated_values[MAX_NODES] = {0};
-    // Set up our variables
-    // int path_cost[MAX_NODES];
-    int path_tracker[MAX_NODES];
+    // Update our table with the new info
+    update_table(&dt0, rcv_index, rcvdpkt->mincost);
 
-    // Going from Node 0 to Nodes 1, 2, and 3
-    for (int node_num = 1; node_num < MAX_NODES; node_num++) {
-        // Find the min path for each node and put it into an array
-        int old_min_cost = dt0.costs[0][node_num];
-        int updated_cost = find_min_cost(0, node_num, old_min_cost, &dt0);
-        updated_values[node_num] = updated_cost;
-        dt0.costs[0][node_num] =  updated_cost;
-    }
-
-    // printdt0(0, neighbor0, &dt0);
-
-    // Tell the other nodes what our new values are
-    for (int node_num = 1; node_num < MAX_NODES; node_num++) {
-        struct RoutePacket update_pkt =  {0, node_num, updated_values};
-        toLayer2(update_pkt);
-    }
+    // Update the table based on our starting node values
+    // Get our cost to the packet node
+    int start_cost = dt0.costs[0][rcv_index];
+    // Update our row using our new data and our starting cost
+    update_row(&dt0, 0, rcv_index, start_cost);
 }
 
-int find_min_cost(int start_num, int target_num, int current_min, struct distance_table* dt) {
-    int path_cost[MAX_NODES];
-    int path_tracker[MAX_NODES];
-
-    // We start at the first node, guard to keep min cost from becoming zero
-    path_tracker[0] = start_num;
-
-    return find_min_cost_int(start_num, target_num, 0, current_min, path_tracker, 1, dt);
-}
-
-int find_min_cost_int(int start_num, int target_num, int accum_cost, int current_min, int path_tracker[MAX_NODES], int path_index_tracker, struct distance_table* dt) {
-    // Create an array for our path cost combos
-    int combo_costs[MAX_NODES] = {999};
-
-    // Scan our connected nodes for their data
-    for (int scan_node = 0; scan_node < MAX_NODES; scan_node++) {
-        // If the scan node is the target:
-        if (scan_node == target_num) {
-            accum_cost += dt->costs[start_num][scan_node];
-            // Challenge our accumulated cost to the current minimum
-            if (accum_cost < current_min) {
-                current_min = accum_cost;
-            }
-            // Return with the result
-            return current_min;
-        // If we already explored the node:
-        } else if (already_explored(path_tracker, scan_node)) {
-            continue;
-        // If node is an unexplored, non-target node:
-        } else {
-            // Recurse and reiterate
-            accum_cost += dt->costs[start_num][scan_node];
-            path_tracker[path_index_tracker] = scan_node;
-            combo_costs[scan_node] = find_min_cost_int(scan_node, target_num, accum_cost, current_min, path_tracker, path_index_tracker + 1, dt);
-            // branches ++;
+void print_distance_table(struct distance_table dt, int table_num) {
+    printf("\nDistance Table %d:\n", table_num);
+    // Loop through each row:
+    for (int row = 0; row < MAX_NODES; row++) {
+        // Loop through each column:
+        for (int col = 0; col < MAX_NODES; col++) {
+            // Print our values:
+            printf("%d, ", dt.costs[row][col]);
         }
-        
-        // For each branch
-        for (int i = 0; i < MAX_NODES; i++) {
-            // If the branch minimum cost is less than our current minimum cost:
-            if (combo_costs[i] < current_min) {
-                // Replace our current minimum cost with it
-                current_min = combo_costs[i];
-            }
-        }
-        return current_min;
+        printf("\n");
     }
-
-    return accum_cost;
-}
-
-// Make sure we didn't already explore the node
-int already_explored(int explored_nodes[MAX_NODES], int node_num) {
-    int already_explored = 0;
-
-    // Check to see if we already explored the node
-    for (int current_node = 0; current_node < MAX_NODES; current_node++) {
-        // If we did:
-        if (current_node == node_num) {
-            // Set already_explored to true
-            already_explored = 1;
-            break;
-        }
-    }
-
-    return already_explored;
+    printf("\n");
 }
 
 
@@ -185,3 +115,47 @@ void printdt0( int MyNodeNumber, struct NeighborCosts *neighbor,
     printf("\n");
 }    // End of printdt0
 
+
+    // // Update the values for another node
+    // // Be able to handle changing only 1, 2, or 3 values instead of all 4
+    // for (int i = 0; i < 4; i++) {
+    //     int current_cost = rcvdpkt->mincost[i];
+    //     // If the cost is not 0(blank)
+    //     if (current_cost != 0) {
+    //         // Update table
+    //         dt0.costs[starting_node][i] = current_cost;
+    //     }
+    // }
+
+    // // Update our own values with the given information
+    // int updated_values[MAX_NODES] = {0};
+    // // Set up our variables
+    // // int path_cost[MAX_NODES];
+    // int path_tracker[MAX_NODES];
+
+    // // Going from Node 0 to Nodes 1, 2, and 3
+    // for (int node_num = 1; node_num < MAX_NODES; node_num++) {
+    //     // Find the min path for each node and put it into an array
+    //     int old_min_cost = dt0.costs[0][node_num];
+    //     int updated_cost = find_min_cost(0, node_num, old_min_cost, &dt0);
+    //     updated_values[node_num] = updated_cost;
+    //     dt0.costs[0][node_num] =  updated_cost;
+    // }
+
+    // if (TraceLevel >= 1) {
+    //     printf("At time t=%1.6f, ", clocktime);
+    //     printf("node 0 current distance vector: %s\n", distance_vector0);
+    // }
+
+    // // printdt0(0, neighbor0, &dt0);
+
+    // // Tell the other nodes what our new values are
+    // for (int node_num = 1; node_num < MAX_NODES; node_num++) {
+    //     struct RoutePacket update_pkt =  {0, node_num, updated_values};
+    //     toLayer2(update_pkt);
+
+    //     if (TraceLevel >= 1) {
+    //         printf("At time t=%1.6f, ", clocktime);
+    //         printf("node 0 sends packet to node %d with: %s\n", node_num, distance_vector0);
+    //     }
+    // }

@@ -8,11 +8,13 @@ extern float clocktime;
 struct distance_table dt2;
 struct NeighborCosts   *neighbor2;
 
+char distance_vector2[20] = "";
+
 /* students to write the following two routines, and maybe some others */
 
 void rtinit2() {
     neighbor2 = getNeighborCosts(2);
-    init_node(2, *neighbor2, &dt2);
+    init_node(2, *neighbor2, &dt2, distance_vector2);
 }
 
 
